@@ -65,7 +65,6 @@
     [[GCDAsyncSocketCommunicationManager sharedInstance] createSocketWithConfig:self.connectConfig];
     
     NSString *ipStr = [NSObject getIPAddressStr];
-    NSLog(@"11");
     
 //    BaseDevice *dev = [[BaseDevice alloc] ];
 //    NSData *data = [BaseDevice configLEDByLanWithState:1];
@@ -445,7 +444,7 @@
         make.height.mas_equalTo(18);
     }];
     
-    [self getDeviceDetailData:YES];
+//    [self getDeviceDetailData:YES];
     
 //    [self setupTimer];
     
@@ -462,12 +461,6 @@
     self.sliderView = [[EFDeviceBottomView alloc] init];
     self.sliderView.frame = CGRectMake(0, ScreenHeight-400-KTabBarHeight, ScreenWidth, 400);
     [self.view addSubview:self.sliderView];
-//    [self.sliderView mas_makeConstraints:^(MASConstraintMaker *make) {
-//        make.width.mas_equalTo(ScreenWidth);
-//        make.height.mas_equalTo(400);
-//        make.top.mas_equalTo(self.view).offset(ScreenHeight-400-KTabBarHeight);
-//        make.centerX.mas_equalTo(self.view);
-//    }];
     
     UIPanGestureRecognizer *tap = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(pan:)];
     [self.sliderView addGestureRecognizer:tap];

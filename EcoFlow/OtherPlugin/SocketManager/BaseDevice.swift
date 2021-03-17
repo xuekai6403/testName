@@ -285,13 +285,13 @@ class BaseDevice: NSObject, DeviceBasicMethod {
 //        }
     }
     
-    
+    // MARK: - 设备操作
     @objc class func configLEDByLan(state: Int) -> (Data) {
         Debug.shared.println("设备SN命令：sn= 发送getSN命令")
-//        let pack = EFProtocol.shareInstance.generateCommand(type: .getSN, product: (0xFFFF))
-        let pack = EFProtocol.shareInstance.generateCommand(type: .getSystemLogs, cmdData: [], product: 0)
-        Debug.shared.printHex(data: pack)
-        Debug.shared.println("~~~~~~~~~~~")
+        let pack = EFProtocol.shareInstance.generateCommand(type: .getStatus, product: (0xFFFF))
+//        let pack = EFProtocol.shareInstance.generateCommand(type: .getSystemLogs, cmdData: [], product: 0)
+//        Debug.shared.printHex(data: pack)
+//        Debug.shared.println("~~~~~~~~~~~")
 
 //        let pack = EFProtocol.shareInstance.generateCommand(type: .setLED, cmdData: [UInt8(state)], product: (0xFFFF))
         let data = Data(pack)
@@ -429,6 +429,7 @@ class BaseDevice: NSObject, DeviceBasicMethod {
         }
     }
     
+    // MARK: - 设备获取信息
     func getLcdStandbyTime(completion: @escaping (Int) -> Void) {
         if isRemoteDevice {
             let params = [
@@ -622,6 +623,7 @@ class BaseDevice: NSObject, DeviceBasicMethod {
 //        }
     }
     
+    // MARK: - 建立TCP
     @objc func createTcpConnect() {
         var ip:String!
         if Networking.ipAddress.contains("192.168.4.") { //Ap直连控制，要把IP设置为192.168.4.1

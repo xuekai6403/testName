@@ -620,10 +620,10 @@
 		6FBA417025FEF2360040C9CE /* Manager */ = {
 			isa = PBXGroup;
 			children = (
-				6FBA417125FEF2360040C9CE /* GCDAsyncSocketCommunicationManager.h */,
-				6FBA417225FEF2360040C9CE /* GCDAsyncSocketManager.m */,
-				6FBA417325FEF2360040C9CE /* GCDAsyncSocketCommunicationManager.m */,
 				6FBA417425FEF2360040C9CE /* GCDAsyncSocketManager.h */,
+				6FBA417225FEF2360040C9CE /* GCDAsyncSocketManager.m */,
+				6FBA417125FEF2360040C9CE /* GCDAsyncSocketCommunicationManager.h */,
+				6FBA417325FEF2360040C9CE /* GCDAsyncSocketCommunicationManager.m */,
 			);
 			path = Manager;
 			sourceTree = "<group>";
