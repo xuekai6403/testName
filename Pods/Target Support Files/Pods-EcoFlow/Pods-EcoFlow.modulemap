@@ -1,0 +1,6 @@
+framework module Pods_EcoFlow {
+  umbrella header "Pods-EcoFlow-umbrella.h"
+
+  export *
+  module * { export * }
+}
