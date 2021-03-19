@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "GACConnectConfig.h"
+#import "GCDAsyncSocketManager.h"
 
 /**
  *  业务类型
@@ -53,6 +54,8 @@ typedef void (^SocketDidReadBlock)(NSError *__nullable error, id __nullable data
 @end
 
 @interface GCDAsyncSocketCommunicationManager : NSObject
+
+@property (nonatomic, strong) GCDAsyncSocketManager *socketManager;
 
 // 连接状态
 @property (nonatomic, assign, readonly) GACSocketConnectStatus connectStatus;

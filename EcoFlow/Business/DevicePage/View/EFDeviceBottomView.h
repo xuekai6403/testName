@@ -10,7 +10,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface EFDeviceBottomView : UIView
-
+@property (strong ,nonatomic) UIView *oneContentView;
+@property (strong ,nonatomic) UIScrollView *twoContentView;
 @end
 
 NS_ASSUME_NONNULL_END

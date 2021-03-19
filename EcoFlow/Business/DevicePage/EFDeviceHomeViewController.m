@@ -10,35 +10,29 @@
 #import "AFURLSessionManager.h"
 #import "RoundProgressView.h"
 #import "EFDeviceData.h"
-
-#import "EcoFlow-Swift.h"
-
 #import "GCDAsyncSocketCommunicationManager.h"
 #import "GACConnectConfig.h"
 #import "EFDeviceBottomViewController.h"
 #import "EFDevicePresentViewController.h"
 #import "EFDeviceBottomView.h"
-
-@interface EFDeviceHomeViewController ()
-
-@property (assign, nonatomic) NSInteger lightState;
-@property (assign, nonatomic) NSInteger ACState;
-@property (assign, nonatomic) NSInteger DCState;
-@property (assign, nonatomic) NSInteger freqState;
-
-@property (strong, nonatomic) UILabel *titleLab;
-@property (strong, nonatomic) UILabel *batteryValueLab;
-@property (strong, nonatomic) UILabel *temperatureValueLab;
-@property (strong, nonatomic) UILabel *powerValueLab;
-@property (strong, nonatomic) UILabel *timeValueLab;
-
-@property (strong, nonatomic) RoundProgressView *progressView;
+#import "BlueToothListViewController.h"
+#import "EcoFlow-Swift.h"
+@interface EFDeviceHomeViewController ()<GACSocketDelegate>
 
 @property (nonatomic, weak) NSTimer *timer;
 @property(nonatomic, assign) int countNum;
 
 @property (nonatomic, strong) GACConnectConfig *connectConfig;
 
+@property (nonatomic, strong) UIButton *titleBtn;
+@property (nonatomic, strong) UIButton *serviceBtn;
+
+@property (nonatomic, strong) UILabel *chargeLB;
+@property (nonatomic, strong) UILabel *hourLB;
+
+@property (nonatomic, strong) UIButton *acBtn;
+@property (nonatomic, strong) UIButton *dcBtn;
+@property (nonatomic, strong) UIButton *carBtn;
 //底部滑块
 @property (nonatomic, strong) EFDeviceBottomView *sliderView;
 
@@ -46,6 +40,8 @@
 
 @implementation EFDeviceHomeViewController{
     NSInteger _statue;
+    NSInteger freqState;
+    NSInteger lightState;
 }
 
 - (GACConnectConfig *)connectConfig {
@@ -63,393 +59,153 @@
     [super viewWillAppear:animated];
     
     [[GCDAsyncSocketCommunicationManager sharedInstance] createSocketWithConfig:self.connectConfig];
-    
-    NSString *ipStr = [NSObject getIPAddressStr];
-    
-//    BaseDevice *dev = [[BaseDevice alloc] ];
-//    NSData *data = [BaseDevice configLEDByLanWithState:1];
-    
-//    CRCCheck *t = [[CRCCheck alloc] init];
-//    UInt8 x = [t makeCRC8WithData:@[@1, @2, @3]];
-//    NSLog(@"");
-//    [[[CRCCheck alloc] init] checkCRC8WithBuf:@[@1, @2, @3]];
+    [GCDAsyncSocketCommunicationManager sharedInstance].socketDelegate = self;
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view.
     
+    [self createUI];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(HeartBeat) name:@"HeartBeatNotification" object:nil];
+    
+    
+}
+- (void)HeartBeat{
+    self.chargeLB.text = [NSString stringWithFormat:@"%d%%",[ParsingTool sharedInstance].statePD.socSum];
+    self.hourLB.text = [NSString stringWithFormat:@"%d hours",[ParsingTool sharedInstance].statePD.remainTime/60];
+}
+#pragma mark - UI
+- (void)createUI{
     self.zx_hideBaseNavBar = YES;
-    
-    self.lightState = 0;
-    
-    UILabel *titleLab = ({
-        UILabel *label = [[UILabel alloc] init];
-        label.text = @"设备首页";
-        label.textAlignment = NSTextAlignmentCenter;
-        label.font = KBFont(18);
-        label.textColor = EFColorHex(@"#FF333333");
-        [self.view addSubview:label];
-        [label sizeToFit];
-        label;
-    });
-    self.titleLab = titleLab;
-    
-    [titleLab mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerX.equalTo(self.view);
-        make.top.mas_equalTo(8 + kTopBarSafeHeightNew);
-        make.height.mas_equalTo(44);
-        make.width.mas_equalTo(ScreenWidth-180);
-    }];
-    
-    UIButton *moreBtn = ({
-        UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
-        btn.backgroundColor = [UIColor redColor];
-//        [btn setImage:KImage(@"Personal_Center_icon_back") forState:UIControlStateNormal];
-//        [btn setImage:[UIImage imageNamed:@"Personal_Center_icon_back"] forState:UIControlStateHighlighted];
-//        [btn setImage:[UIImage imageNamed:@"Personal_Center_icon_back"] forState:UIControlStateSelected];
-        [btn addTarget:self action:@selector(clickedMoreAction:) forControlEvents:UIControlEventTouchUpInside];
-        [self.view addSubview:btn];
-        btn.contentEdgeInsets = UIEdgeInsetsMake(10, 10, 10, 10);
-        btn;
-    });
-    
-    [moreBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(4);
-        make.top.mas_equalTo(8 + kTopBarSafeHeightNew);
-        make.width.height.mas_equalTo(44);
-    }];
-    
-    UIButton *contactBtn = ({
-        UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
-        btn.backgroundColor = [UIColor blueColor];
-//        [btn setImage:KImage(@"Personal_Center_icon_back") forState:UIControlStateNormal];
-//        [btn setImage:[UIImage imageNamed:@"Personal_Center_icon_back"] forState:UIControlStateHighlighted];
-//        [btn setImage:[UIImage imageNamed:@"Personal_Center_icon_back"] forState:UIControlStateSelected];
-        [btn addTarget:self action:@selector(clickedContactAction:) forControlEvents:UIControlEventTouchUpInside];
-        [self.view addSubview:btn];
-        btn.contentEdgeInsets = UIEdgeInsetsMake(10, 10, 10, 10);
-        btn;
-    });
-    
-    [contactBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.right.mas_equalTo(-4);
-        make.top.mas_equalTo(8 + kTopBarSafeHeightNew);
-        make.width.height.mas_equalTo(44);
-    }];
-    
-    self.progressView =[[RoundProgressView alloc] initWithFrame:CGRectMake((ScreenWidth - 300)/2, 100, 300, 300)];
-    self.progressView.backgroundColor = [UIColor clearColor];
-    [self.progressView setProgressColor:[UIColor greenColor]];
-//    self.progressView.lineDashPattern = @[@(8),@(8)];
-    self.progressView.progressFont = [UIFont systemFontOfSize:70];
-    [self.view addSubview:self.progressView];
-    
-    [self.progressView updateProgress:50];
-    
-    [self.progressView mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerX.equalTo(self.view);
-        make.top.mas_equalTo(108 + kTopBarSafeHeightNew);
-        make.width.height.mas_equalTo(300);
-    }];
-    
-    UIButton *lightSWBtn = ({
-        UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
-//        btn.backgroundColor = [UIColor blueColor];
-//        [btn setImage:KImage(@"Personal_Center_icon_back") forState:UIControlStateNormal];
-//        [btn setImage:[UIImage imageNamed:@"Personal_Center_icon_back"] forState:UIControlStateHighlighted];
-//        [btn setImage:[UIImage imageNamed:@"Personal_Center_icon_back"] forState:UIControlStateSelected];
-        [btn addTarget:self action:@selector(clickedLightSWAction:) forControlEvents:UIControlEventTouchUpInside];
-        [self.view addSubview:btn];
-        btn.contentEdgeInsets = UIEdgeInsetsMake(10, 10, 10, 10);
-        btn;
-    });
-    
-    [lightSWBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerX.equalTo(self.progressView);
-        make.top.mas_equalTo(self.progressView);
-        make.width.mas_equalTo(100);
-        make.height.mas_equalTo(44);
-    }];
-    
-    UIButton *ACSWBtn = ({
-        UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
-        [btn setTitle:@"AC" forState:UIControlStateNormal];
-        [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-        btn.titleLabel.font = KFont(20);
-//        btn.backgroundColor = [UIColor blueColor];
-//        [btn setImage:KImage(@"Personal_Center_icon_back") forState:UIControlStateNormal];
-//        [btn setImage:[UIImage imageNamed:@"Personal_Center_icon_back"] forState:UIControlStateHighlighted];
-//        [btn setImage:[UIImage imageNamed:@"Personal_Center_icon_back"] forState:UIControlStateSelected];
-        [btn addTarget:self action:@selector(clickedACSWAction:) forControlEvents:UIControlEventTouchUpInside];
-        [self.view addSubview:btn];
-//        btn.contentEdgeInsets = UIEdgeInsetsMake(10, 10, 10, 10);
-        btn;
-    });
-    
-    [ACSWBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.right.mas_equalTo(self.progressView.mas_centerX).offset(-3);
-        make.bottom.mas_equalTo(self.progressView);
-        make.width.mas_equalTo(50);
-        make.height.mas_equalTo(44);
-    }];
-    
-    UIButton *DCSWBtn = ({
-        UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
-        [btn setTitle:@"DC" forState:UIControlStateNormal];
-        [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-        btn.titleLabel.font = KFont(20);
-//        btn.backgroundColor = [UIColor blueColor];
-//        [btn setImage:KImage(@"Personal_Center_icon_back") forState:UIControlStateNormal];
-//        [btn setImage:[UIImage imageNamed:@"Personal_Center_icon_back"] forState:UIControlStateHighlighted];
-//        [btn setImage:[UIImage imageNamed:@"Personal_Center_icon_back"] forState:UIControlStateSelected];
-        [btn addTarget:self action:@selector(clickedDCSWAction:) forControlEvents:UIControlEventTouchUpInside];
-        [self.view addSubview:btn];
-//        btn.contentEdgeInsets = UIEdgeInsetsMake(10, 10, 10, 10);
-        btn;
-    });
-    
-    [DCSWBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(self.progressView.mas_centerX).offset(3);
-        make.bottom.mas_equalTo(self.progressView);
-        make.width.mas_equalTo(50);
-        make.height.mas_equalTo(44);
-    }];
-    
-    UIImageView *batteryIcon = [UIImageView new];
-    batteryIcon.backgroundColor = [UIColor purpleColor];
-    [self.view addSubview:batteryIcon];
-    
-    [batteryIcon mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(self.progressView.mas_left);
-        make.top.mas_equalTo(self.progressView.mas_bottom).offset(80);
-        make.width.mas_equalTo(40);
-        make.height.mas_equalTo(30);
-    }];
-    
-    UILabel *batteryValueLab = ({
-        UILabel *label = [[UILabel alloc] init];
-        label.text = @"--%";
-        label.textAlignment = NSTextAlignmentCenter;
-        label.font = KBFont(22);
-        label.textColor = EFColorHex(@"#FF333333");
-        [self.view addSubview:label];
-        [label sizeToFit];
-        label;
-    });
-    self.batteryValueLab = batteryValueLab;
-    
-    [batteryValueLab mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerY.mas_equalTo(batteryIcon.mas_centerY);
-        make.left.mas_equalTo(batteryIcon.mas_right).offset(12);
-        make.height.mas_equalTo(30);
-    }];
-    
-    UILabel *batteryNameLab = ({
-        UILabel *label = [[UILabel alloc] init];
-        label.text = @"Battery";
-        label.textAlignment = NSTextAlignmentCenter;
-        label.font = KFont(14);
-        label.textColor = EFColorHex(@"#FF666666");
-        [self.view addSubview:label];
-        [label sizeToFit];
-        label;
-    });
-    
-    [batteryNameLab mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(batteryValueLab.mas_left);
-        make.top.mas_equalTo(batteryValueLab.mas_bottom).offset(3);
-        make.height.mas_equalTo(18);
-    }];
-    
-    UIView *line1 = [UIView new];
-    line1.backgroundColor = [UIColor lightGrayColor];
-    [self.view addSubview:line1];
-    
-    [line1 mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerX.equalTo(self.view);
-        make.top.mas_equalTo(self.progressView.mas_bottom).offset(70);
-        make.width.mas_equalTo(1);
-        make.height.mas_equalTo(64);
-    }];
-    
-    UIView *line2 = [UIView new];
-    line2.backgroundColor = [UIColor lightGrayColor];
-    [self.view addSubview:line2];
-    
-    [line2 mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(batteryIcon.mas_left);
-        make.right.mas_equalTo(line1.mas_left).offset(-15);
-        make.top.mas_equalTo(line1.mas_bottom).offset(15);
-        make.height.mas_equalTo(1);
-    }];
-    
-    UIImageView *temperatureIcon = [UIImageView new];
-    temperatureIcon.backgroundColor = [UIColor purpleColor];
-    [self.view addSubview:temperatureIcon];
-    
-    [temperatureIcon mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(line1.mas_right).offset(15);
-        make.top.mas_equalTo(batteryIcon.mas_top);
-        make.width.mas_equalTo(40);
-        make.height.mas_equalTo(30);
-    }];
-    
-    UILabel *temperatureValueLab = ({
-        UILabel *label = [[UILabel alloc] init];
-        label.text = @"--℃";
-        label.textAlignment = NSTextAlignmentCenter;
-        label.font = KBFont(22);
-        label.textColor = EFColorHex(@"#FF333333");
-        [self.view addSubview:label];
-        [label sizeToFit];
-        label;
-    });
-    self.temperatureValueLab = temperatureValueLab;
-    
-    [temperatureValueLab mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerY.mas_equalTo(temperatureIcon.mas_centerY);
-        make.left.mas_equalTo(temperatureIcon.mas_right).offset(12);
-        make.height.mas_equalTo(30);
-    }];
-    
-    UILabel *temperatureNameLab = ({
-        UILabel *label = [[UILabel alloc] init];
-        label.text = @"Temperature";
-        label.textAlignment = NSTextAlignmentCenter;
-        label.font = KFont(14);
-        label.textColor = EFColorHex(@"#FF666666");
-        [self.view addSubview:label];
-        [label sizeToFit];
-        label;
-    });
-    
-    [temperatureNameLab mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(temperatureValueLab.mas_left);
-        make.top.mas_equalTo(temperatureValueLab.mas_bottom).offset(3);
-        make.height.mas_equalTo(18);
-    }];
-    
-    UIView *line3 = [UIView new];
-    line3.backgroundColor = [UIColor lightGrayColor];
-    [self.view addSubview:line3];
-    
-    [line3 mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerX.equalTo(self.view);
-        make.top.mas_equalTo(line1.mas_bottom).offset(30);
-        make.width.mas_equalTo(1);
-        make.height.mas_equalTo(64);
-    }];
-    
-    UIView *line4 = [UIView new];
-    line4.backgroundColor = [UIColor lightGrayColor];
-    [self.view addSubview:line4];
-    
-    [line4 mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.width.mas_equalTo(line2.mas_width);
-        make.left.mas_equalTo(line1.mas_right).offset(15);
-        make.top.mas_equalTo(line1.mas_bottom).offset(15);
-        make.height.mas_equalTo(1);
-    }];
-    
-    UIImageView *powerIcon = [UIImageView new];
-    powerIcon.backgroundColor = [UIColor purpleColor];
-    [self.view addSubview:powerIcon];
-    
-    [powerIcon mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(self.progressView.mas_left);
-        make.top.mas_equalTo(line3.mas_top).offset(9);
-        make.width.mas_equalTo(40);
-        make.height.mas_equalTo(30);
-    }];
-    
-    UILabel *powerValueLab = ({
-        UILabel *label = [[UILabel alloc] init];
-        label.text = @"--W";
-        label.textAlignment = NSTextAlignmentCenter;
-        label.font = KBFont(22);
-        label.textColor = EFColorHex(@"#FF333333");
-        [self.view addSubview:label];
-        [label sizeToFit];
-        label;
-    });
-    self.powerValueLab = powerValueLab;
-    
-    [powerValueLab mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerY.mas_equalTo(powerIcon.mas_centerY);
-        make.left.mas_equalTo(powerIcon.mas_right).offset(12);
-        make.height.mas_equalTo(30);
-    }];
-    
-    UILabel *powerNameLab = ({
-        UILabel *label = [[UILabel alloc] init];
-        label.text = @"Power";
-        label.textAlignment = NSTextAlignmentCenter;
-        label.font = KFont(14);
-        label.textColor = EFColorHex(@"#FF666666");
-        [self.view addSubview:label];
-        [label sizeToFit];
-        label;
-    });
-    
-    [powerNameLab mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(powerValueLab.mas_left);
-        make.top.mas_equalTo(powerValueLab.mas_bottom).offset(3);
-        make.height.mas_equalTo(18);
-    }];
-    
-    UIImageView *timeIcon = [UIImageView new];
-    timeIcon.backgroundColor = [UIColor purpleColor];
-    [self.view addSubview:timeIcon];
-    
-    [timeIcon mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(temperatureIcon.mas_left);
-        make.top.mas_equalTo(powerIcon.mas_top);
-        make.width.mas_equalTo(40);
-        make.height.mas_equalTo(30);
-    }];
-    
-    UILabel *timeValueLab = ({
-        UILabel *label = [[UILabel alloc] init];
-        label.text = @"--";
-        label.textAlignment = NSTextAlignmentCenter;
-        label.font = KBFont(22);
-        label.textColor = EFColorHex(@"#FF333333");
-        [self.view addSubview:label];
-        [label sizeToFit];
-        label;
-    });
-    self.timeValueLab = timeValueLab;
-    
-    [timeValueLab mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerY.mas_equalTo(timeIcon.mas_centerY);
-        make.left.mas_equalTo(timeIcon.mas_right).offset(12);
-        make.height.mas_equalTo(30);
-    }];
-    
-    UILabel *timeNameLab = ({
-        UILabel *label = [[UILabel alloc] init];
-        label.text = @"Time";
-        label.textAlignment = NSTextAlignmentCenter;
-        label.font = KFont(14);
-        label.textColor = EFColorHex(@"#FF666666");
-        [self.view addSubview:label];
-        [label sizeToFit];
-        label;
-    });
-    
-    [timeNameLab mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(timeValueLab.mas_left);
-        make.top.mas_equalTo(timeValueLab.mas_bottom).offset(3);
-        make.height.mas_equalTo(18);
-    }];
-    
-//    [self getDeviceDetailData:YES];
-    
-//    [self setupTimer];
     
     self.view.backgroundColor = [UIColor colorWithHextColorString:@"FAFAFA"];
     
+    self.titleBtn = [[UIButton alloc] init];
+    [self.titleBtn setTitle:@"R600 >" forState:UIControlStateNormal];
+    self.titleBtn.titleLabel.font = [UIFont systemFontOfSize:16];
+    self.titleBtn.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
+    [self.titleBtn setTitleColor:[UIColor colorWithHextColorString:@"111111"] forState:UIControlStateNormal];
+    [self.view addSubview:self.titleBtn];
+    [self.titleBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.width.mas_equalTo(100);
+        make.height.mas_equalTo(30);
+        make.top.mas_equalTo(self.view).offset(40);
+        make.leading.mas_equalTo(self.view).offset(20);
+    }];
+    
+    self.serviceBtn = [[UIButton alloc] init];
+    self.serviceBtn.contentHorizontalAlignment = UIControlContentHorizontalAlignmentRight;
+    [self.serviceBtn setTitle:@"👤" forState:UIControlStateNormal];
+    self.serviceBtn.titleLabel.font = [UIFont systemFontOfSize:16];
+    [self.serviceBtn setTitleColor:[UIColor colorWithHextColorString:@"111111"] forState:UIControlStateNormal];
+    [self.view addSubview:self.serviceBtn];
+    [self.serviceBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.width.mas_equalTo(100);
+        make.height.mas_equalTo(30);
+        make.centerY.mas_equalTo(self.titleBtn);
+        make.trailing.mas_equalTo(self.view).offset(-20);
+    }];
+    
+    UILabel *chargeTitleLB = [[UILabel alloc] init];
+    chargeTitleLB.text = @"charging";
+    chargeTitleLB.textColor = [UIColor colorWithHextColorString:@"222222"];
+    chargeTitleLB.font = [UIFont systemFontOfSize:15];
+    [self.view addSubview:chargeTitleLB];
+    [chargeTitleLB mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.width.mas_equalTo(100);
+        make.height.mas_equalTo(20);
+        make.leading.mas_equalTo(self.view).offset(15);
+        make.top.mas_equalTo(self.view).offset(KNavBarHeight+35);
+    }];
+    
+    self.chargeLB = [[UILabel alloc] init];
+    self.chargeLB.text = @"80%";
+    self.chargeLB.textColor = [UIColor colorWithHextColorString:@"000000"];
+    self.chargeLB.font = [UIFont systemFontOfSize:35];
+    [self.view addSubview:self.chargeLB];
+    [self.chargeLB mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.width.mas_equalTo(100);
+        make.height.mas_equalTo(40);
+        make.leading.mas_equalTo(self.view).offset(15);
+        make.top.mas_equalTo(chargeTitleLB.mas_bottom).offset(5);
+    }];
+    
+    self.hourLB = [[UILabel alloc] init];
+    self.hourLB.text = @"12.35 h";
+    self.hourLB.textColor = [UIColor colorWithHextColorString:@"000000"];
+    self.hourLB.font = [UIFont systemFontOfSize:20];
+    [self.view addSubview:self.hourLB];
+    [self.hourLB mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.width.mas_equalTo(200);
+        make.height.mas_equalTo(20);
+        make.leading.mas_equalTo(self.view).offset(15);
+        make.top.mas_equalTo(self.chargeLB.mas_bottom).offset(5);
+    }];
+    
+    
+    self.acBtn = [[UIButton alloc] init];
+    [self.acBtn setTitle:@"AC" forState:UIControlStateNormal];
+    self.acBtn.titleLabel.font = [UIFont systemFontOfSize:14];
+    self.acBtn.backgroundColor = [UIColor colorWithHextColorString:@"DDDDDD"];
+    [self.acBtn setTitleColor:[UIColor colorWithHextColorString:@"111111"] forState:UIControlStateNormal];
+    [self.acBtn addTarget:self action:@selector(pressAc) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:self.acBtn];
+    [self.acBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.width.mas_equalTo(50);
+        make.height.mas_equalTo(50);
+        make.top.mas_equalTo(self.hourLB.mas_bottom).offset(30);
+        make.leading.mas_equalTo(self.view).offset(20);
+    }];
+    self.acBtn.layer.cornerRadius = 25;
+    self.acBtn.layer.masksToBounds = YES;
+    
+    self.dcBtn = [[UIButton alloc] init];
+    [self.dcBtn setTitle:@"DC" forState:UIControlStateNormal];
+    self.dcBtn.titleLabel.font = [UIFont systemFontOfSize:14];
+    self.dcBtn.backgroundColor = [UIColor colorWithHextColorString:@"DDDDDD"];
+    [self.dcBtn addTarget:self action:@selector(pressDc) forControlEvents:UIControlEventTouchUpInside];
+    [self.dcBtn setTitleColor:[UIColor colorWithHextColorString:@"111111"] forState:UIControlStateNormal];
+    [self.view addSubview:self.dcBtn];
+    [self.dcBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.width.mas_equalTo(50);
+        make.height.mas_equalTo(50);
+        make.top.mas_equalTo(self.hourLB.mas_bottom).offset(30);
+        make.left.mas_equalTo(self.acBtn.mas_right).offset(15);
+    }];
+    self.dcBtn.layer.cornerRadius = 25;
+    self.dcBtn.layer.masksToBounds = YES;
+    
+    self.carBtn = [[UIButton alloc] init];
+    [self.carBtn setTitle:@"CAR" forState:UIControlStateNormal];
+    self.carBtn.titleLabel.font = [UIFont systemFontOfSize:14];
+    self.carBtn.backgroundColor = [UIColor colorWithHextColorString:@"DDDDDD"];
+    [self.carBtn setTitleColor:[UIColor colorWithHextColorString:@"111111"] forState:UIControlStateNormal];
+    [self.view addSubview:self.carBtn];
+    [self.carBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.width.mas_equalTo(50);
+        make.height.mas_equalTo(50);
+        make.top.mas_equalTo(self.hourLB.mas_bottom).offset(30);
+        make.left.mas_equalTo(self.dcBtn.mas_right).offset(15);
+    }];
+    self.carBtn.layer.cornerRadius = 25;
+    self.carBtn.layer.masksToBounds = YES;
+    
+    UIButton *bluetooth = [[UIButton alloc] init];
+    [bluetooth setTitle:@"蓝牙" forState:UIControlStateNormal];
+    bluetooth.titleLabel.font = [UIFont systemFontOfSize:14];
+    bluetooth.backgroundColor = [UIColor colorWithHextColorString:@"DDDDDD"];
+    [bluetooth addTarget:self action:@selector(pressBluetooth) forControlEvents:UIControlEventTouchUpInside];
+    [bluetooth setTitleColor:[UIColor colorWithHextColorString:@"111111"] forState:UIControlStateNormal];
+    [self.view addSubview:bluetooth];
+    [bluetooth mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.width.mas_equalTo(50);
+        make.height.mas_equalTo(50);
+        make.top.mas_equalTo(self.hourLB.mas_bottom).offset(30);
+        make.left.mas_equalTo(self.carBtn.mas_right).offset(15);
+    }];
+    bluetooth.layer.cornerRadius = 25;
+    bluetooth.layer.masksToBounds = YES;
     
     //滑块方案1
 //    EFDeviceBottomViewController *vc = [[EFDeviceBottomViewController alloc] init];
@@ -459,11 +215,24 @@
     
     //滑块方案2
     self.sliderView = [[EFDeviceBottomView alloc] init];
-    self.sliderView.frame = CGRectMake(0, ScreenHeight-400-KTabBarHeight, ScreenWidth, 400);
+    self.sliderView.frame = CGRectMake(0, ScreenHeight-300-KTabBarHeight, ScreenWidth, 300);
     [self.view addSubview:self.sliderView];
     
     UIPanGestureRecognizer *tap = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(pan:)];
     [self.sliderView addGestureRecognizer:tap];
+}
+#pragma mark - 按钮点击事件
+- (void)pressAc{
+    self.acBtn.selected = !self.acBtn.selected;
+    [[GCDAsyncSocketCommunicationManager sharedInstance].socketManager socketWriteRawData:[[EncodeTool sharedInstance] generateSet_ACWithState:self.acBtn.selected]];
+}
+- (void)pressDc{
+    self.dcBtn.selected = !self.dcBtn.selected;
+    [[GCDAsyncSocketCommunicationManager sharedInstance].socketManager socketWriteRawData:[[EncodeTool sharedInstance] generateSet_DCWithState:self.dcBtn.selected]];
+}
+- (void)pressBluetooth{
+    BlueToothListViewController *blueVC = [[BlueToothListViewController alloc] init];
+    [self.navigationController pushViewController:blueVC animated:YES];
 }
 #pragma mark - 滑块手势
 - (void)pan:(UIPanGestureRecognizer*)swipe{
@@ -473,13 +242,17 @@
     if (swipe.state == UIGestureRecognizerStateEnded) {
         if (_statue == 1) {
             [UIView animateWithDuration:0.20 animations:^{
-                self.sliderView.frame = CGRectMake(0, 100, ScreenWidth, ScreenHeight-100-KTabBarHeight);
+                self.sliderView.frame = CGRectMake(0, 50, ScreenWidth, ScreenHeight-50-KTabBarHeight);
+                self.sliderView.oneContentView.hidden = YES;
+                self.sliderView.twoContentView.hidden = NO;
             } completion:^(BOOL finished) {
                 
             }];
         }else{
             [UIView animateWithDuration:0.15 animations:^{
-                self.sliderView.frame = CGRectMake(0, ScreenHeight-400, ScreenWidth, 400-KTabBarHeight);
+                self.sliderView.frame = CGRectMake(0, ScreenHeight-300-KTabBarHeight, ScreenWidth, 300);
+                self.sliderView.oneContentView.hidden = NO;
+                self.sliderView.twoContentView.hidden = YES;
             } completion:^(BOOL finished) {
                 
             }];
@@ -499,18 +272,18 @@
         }
     } else if (absY > absX) {
         if (translation.y<0) {//向上滑动
-            if (self.sliderView.frame.origin.y>100) {
+            if (self.sliderView.frame.origin.y>50) {
                 [UIView animateWithDuration:0.20 animations:^{
-                    self.sliderView.frame = CGRectMake(0, ScreenHeight-400-absY, ScreenWidth, (400+absY)-KTabBarHeight);
+                    self.sliderView.frame = CGRectMake(0, ScreenHeight-300-absY-KTabBarHeight, ScreenWidth, 300+absY);
                 } completion:^(BOOL finished) {
                     
                 }];
             }
             _statue = 1;
         }else{ //向下滑动
-            if (self.sliderView.frame.origin.y<ScreenHeight-400) {
+            if (self.sliderView.frame.origin.y<ScreenHeight-300-KTabBarHeight) {
                 [UIView animateWithDuration:0.20 animations:^{
-                    self.sliderView.frame = CGRectMake(0, 100+absY, ScreenWidth, ScreenHeight-100-absY-KTabBarHeight);
+                    self.sliderView.frame = CGRectMake(0, 50+absY, ScreenWidth, ScreenHeight-50-absY-KTabBarHeight);
                 } completion:^(BOOL finished) {
                     
                 }];
@@ -518,6 +291,23 @@
             _statue = 2;
         }
     }
+}
+
+#pragma mark - GACDelegate
+- (void)socketReadedData:(nullable id)data forType:(NSInteger)type{
+    ParsingTool *parsing = [ParsingTool sharedInstance];
+    [parsing parsingDataWithData:data];
+}
+
+- (void)socketDidConnect{
+    //连接成功发送心跳包
+    EncodeTool *encode = [EncodeTool sharedInstance];
+    NSData *data = [encode generatePD_STATUS];
+    [[GCDAsyncSocketCommunicationManager sharedInstance].socketManager socketWriteRawData:data];
+}
+
+- (void)connectionAuthAppraisalFailedWithErorr:(nonnull NSError *)error{
+    NSLog(@"...");
 }
 //TODO:- 刷新设备数据
 - (void)refreshDeviceShowData:(EFDeviceData *)deviceData {
@@ -528,12 +318,12 @@
     NSInteger timeM = deviceData.status.pd.remain_time % 60;
     
     NSInteger led_state = deviceData.status.pd.led_state;
-    self.lightState = led_state;
-    
-    self.batteryValueLab.text = [NSString stringWithFormat:@"%ld%%", soc];
-    self.temperatureValueLab.text = [NSString stringWithFormat:@"%ld℃", temperature];
-    self.powerValueLab.text = [NSString stringWithFormat:@"%ldW", watts_out_sum];
-    self.timeValueLab.text = [NSString stringWithFormat:@"%ldh%ldm", timeH,timeM];
+//    self.lightState = led_state;
+//
+//    self.batteryValueLab.text = [NSString stringWithFormat:@"%ld%%", soc];
+//    self.temperatureValueLab.text = [NSString stringWithFormat:@"%ld℃", temperature];
+//    self.powerValueLab.text = [NSString stringWithFormat:@"%ldW", watts_out_sum];
+//    self.timeValueLab.text = [NSString stringWithFormat:@"%ldh%ldm", timeH,timeM];
 }
 
 //TODO:- 获取设备详情
@@ -543,7 +333,6 @@
     }
     
     NSDictionary *paramDic = @{@"sn" : @"R7ABZ5HCC112218"};
-    
     @weakify(self)
     [QBBaseNetTool getWithUrl:@"v1/devices/getDeviceData" param:paramDic resultClass:[EFDeviceDataEx class] success:^(EFDeviceDataEx *responseObj) {
         @strongify(self)
@@ -590,47 +379,37 @@
 - (void)clickedContactAction:(UIButton *)btn {
     [btn setUIKitShortLockTime];
     
-    if (self.freqState == 1) {
-        self.freqState = 2;
-    } else {
-        self.freqState = 1;
-    }
-    NSDictionary *dict = @{@"sn" : @"R7ABZ5HCC112218", @"cfg" : @{@"id" : @(66), @"out_freq" : @(self.freqState)}};
+//    if (self.freqState == 1) {
+//        self.freqState = 2;
+//    } else {
+//        self.freqState = 1;
+//    }
+    NSDictionary *dict = @{@"sn" : @"R7ABZ5HCC112218", @"cfg" : @{@"id" : @(66), @"out_freq" : @(freqState)}};
     [self setupDevice:dict];
 }
 
 - (void)clickedLightSWAction:(UIButton *)btn {
     [btn setUIKitShortLockTime];
     
-    NSLog(@"~~~~~~~~~~~~~~~clickedLightSWActionState:%ld", self.lightState);
-    self.lightState = self.lightState + 1;
-    if (self.lightState > 3) {
-        self.lightState = 0;
+    NSLog(@"~~~~~~~~~~~~~~~clickedLightSWActionState:%ld", lightState);
+    lightState = lightState + 1;
+    if (lightState > 3) {
+        lightState = 0;
     }
 //    NSDictionary *dict = @{@"sn" : @"R7ABZ5HCC112218", @"cfg" : @{@"state" : @(self.lightState), @"id" : @(35), @"work_mode" : @(0), @"model" : @(0), @"brightness" : @(0), @"animateMode" : @(0), @"color" : @(0), @"enabled" : @(0), @"out_voltage" : @(0), @"out_freq" : @(0), @"xboost" : @(0), @"standby_mode" : @(0), @"lcd_time" : @(0), @"max_chg_soc" : @(0)}};
-    NSDictionary *dict = @{@"sn" : @"R7ABZ5HCC112218", @"cfg" : @{@"state" : @(self.lightState), @"id" : @(35)}};
+    NSDictionary *dict = @{@"sn" : @"R7ABZ5HCC112218", @"cfg" : @{@"state" : @(lightState), @"id" : @(35)}};
     [self setupDevice:dict];
 }
 
 - (void)clickedACSWAction:(UIButton *)btn {
     [btn setUIKitShortLockTime];
-    if (self.ACState == 0) {
-        self.ACState = 1;
-    } else {
-        self.ACState = 0;
-    }
-    NSDictionary *dict = @{@"sn" : @"R7ABZ5HCC112218", @"cfg" : @{@"enabled" : @(self.ACState), @"id" : @(66)}};
+    NSDictionary *dict = @{@"sn" : @"R7ABZ5HCC112218", @"cfg" : @{@"enabled" : @(self.acBtn.selected), @"id" : @(66)}};
     [self setupDevice:dict];
 }
 
 - (void)clickedDCSWAction:(UIButton *)btn {
     [btn setUIKitShortLockTime];
-    if (self.DCState == 0) {
-        self.DCState = 1;
-    } else {
-        self.DCState = 0;
-    }
-    NSDictionary *dict = @{@"sn" : @"R7ABZ5HCC112218", @"cfg" : @{@"enabled" : @(self.DCState), @"id" : @(34)}};
+    NSDictionary *dict = @{@"sn" : @"R7ABZ5HCC112218", @"cfg" : @{@"enabled" : @(self.dcBtn.selected), @"id" : @(34)}};
     [self setupDevice:dict];
 }
 

@@ -115,7 +115,7 @@ static const NSInteger kBeatLimit = 3;
 }
 
 - (void)socketBeginReadData {
-    [self.socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 maxLength:0 tag:0];
+    [self.socket readDataWithTimeout:-1 tag:0];
 }
 
 - (void)disconnectSocket {

@@ -18,7 +18,8 @@ enum EFHeartbeatType: UInt8 {
 }
 
 //MARK: - 心跳包类型
-class EFHeartbeatPD { //heartbeat_pd_t, ADDR_PD=2, 78bytes  系统待机时间 提示音
+@objcMembers
+class EFHeartbeatPD:NSObject{ //heartbeat_pd_t, ADDR_PD=2, 78bytes  系统待机时间 提示音
     static let LENGTH:Int = 78
     static let LENGTH_BEEP:Int = 79 //新增加beep字段，一个UInt8
     static let MR310_LENGTH: Int = 80 //MR310
@@ -73,14 +74,16 @@ class EFHeartbeatPD { //heartbeat_pd_t, ADDR_PD=2, 78bytes  系统待机时间 �
     
     var lcdOff:UInt16 = 0        //LCD息屏时间 0:永不息屏
     
-    init() {
+    override init() {
+        
     }
     
     init(array: [UInt8]) {
-        update(with: array)
+        super.init()
+        updateArray(with: array)
     }
     
-    func update(with array: [UInt8]) {
+    func updateArray(with array: [UInt8]) {
         guard (array.count == EFHeartbeatPD.LENGTH || array.count == EFHeartbeatPD.LENGTH_BEEP || array.count == EFHeartbeatPD.MR310_LENGTH) else { return }
         if array.count == EFHeartbeatPD.LENGTH || array.count == EFHeartbeatPD.LENGTH_BEEP {
             let arrayOffset:Int = (array.count == EFHeartbeatPD.LENGTH_BEEP ? 1 : 0)
@@ -272,7 +275,7 @@ class EFHeartbeatPD { //heartbeat_pd_t, ADDR_PD=2, 78bytes  系统待机时间 �
 
     }
     
-    func update(with jsonStr: String) {
+    func updateString(with jsonStr: String) {
         do {
             let jsonDat = try JSON(data: jsonStr.data(using: String.Encoding.utf8)!)
             //PD

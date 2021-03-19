@@ -285,15 +285,27 @@ class BaseDevice: NSObject, DeviceBasicMethod {
 //        }
     }
     
+    // MARK: - 蓝牙测试
+    @objc class func testBlueTooth(state: Int) -> (Data) {
+        let pack = EFProtocol.shareInstance.generateBlueToothCommand(type: .getStatus)
+        let data = Data(pack)
+        return data
+    }
+    
+    @objc class func testBlueToothSN(state: Int) -> (Data) {
+        let pack = EFProtocol.shareInstance.generateBlueToothCommand(type: .getSN)
+        let data = Data(pack)
+        return data
+    }
     // MARK: - 设备操作
     @objc class func configLEDByLan(state: Int) -> (Data) {
         Debug.shared.println("设备SN命令：sn= 发送getSN命令")
-        let pack = EFProtocol.shareInstance.generateCommand(type: .getStatus, product: (0xFFFF))
+//        let pack = EFProtocol.shareInstance.generateCommand(type: .getStatus, product: (0xFFFF))
 //        let pack = EFProtocol.shareInstance.generateCommand(type: .getSystemLogs, cmdData: [], product: 0)
 //        Debug.shared.printHex(data: pack)
 //        Debug.shared.println("~~~~~~~~~~~")
 
-//        let pack = EFProtocol.shareInstance.generateCommand(type: .setLED, cmdData: [UInt8(state)], product: (0xFFFF))
+        let pack = EFProtocol.shareInstance.generateCommand(type: .setLED, cmdData: [UInt8(state)], product: (0xFFFF))
         let data = Data(pack)
         
 //        let str = String.init(data: data, encoding: .utf8)!
@@ -676,7 +688,7 @@ class BaseDevice: NSObject, DeviceBasicMethod {
                 if let type = EFHeartbeatType(rawValue: package.srcAddr) {
                     switch type {
                     case .pd:
-                        statePD.update(with: payload)
+                        statePD.updateArray(with: payload)
                         Debug.shared.println("更新模块：PD 设备LED: \(getDeviceName()), \(self.statePD.ledState)")
                         moduleUpdated[0] = true
                         if !isModuleInit[0] { isModuleInit[0] = true }
@@ -776,7 +788,7 @@ class BaseDevice: NSObject, DeviceBasicMethod {
         
         parseUpgradingData(data: dataJson)
         
-        self.statePD.update(with: dataStr)
+        self.statePD.updateString(with: dataStr)
        // self.stateMR310PD.update(with: dataStr)
         Debug.shared.println("当前inv地址3: \(stateINV.invSwitch)")
         self.stateINV.update(with: dataStr)

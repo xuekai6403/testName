@@ -79,9 +79,11 @@ class EFProtocol {
     private let IS_ACK:UInt8 = 0x0
     private let CHECK_TYPE:UInt8 = 0x03
     private let SERV_ADDR:UInt8 = 0x20
+    private let BLUESERV_ADDR:UInt8 = 0x21
     
     static let CMD_SET_COMMON:UInt8 = 0x01
     static let CMD_ID_SYS_RESET:UInt8 = 0x03
+    
     static let CMD_SET_IOT_SERVER:UInt8 = 0x20
     static let CMD_ID_GET_SN:UInt8 = 0x41
     static let CMD_ID_STATUS_PUSH:UInt8 = 0x02
@@ -107,6 +109,8 @@ class EFProtocol {
     static let ADDR_BMS_S:UInt8 = 0x6
     static let ADDR_INV:UInt8 = 0x4
     static let ADDR_MPPT:UInt8 = 0x5
+    static let ADDR_BLUE:UInt8 = 0x32
+    
     private let HEADER_SIZE:Int = 16
     static let DEVICE_SN_LEN:Int = 16
     
@@ -239,6 +243,7 @@ class EFProtocol {
         return package
     }
     
+    // MARK: - 生成请求Data(加密数据)
     func encode(cmdSet: UInt8, cmdID: UInt8, product: UInt16, data: [UInt8], destAddr: UInt8) -> [UInt8] {
         var frame = [UInt8]()
         frame.append(FRAME_SIG)
@@ -279,7 +284,112 @@ class EFProtocol {
 
         return frame
     }
-    
+    func bluetoothEncode(cmdSet: UInt8, cmdID: UInt8, product: UInt16, data: [UInt8], destAddr: UInt8) -> [UInt8] {
+        var frame = [UInt8]()
+        frame.append(FRAME_SIG)
+        frame.append(PROTOCOL_V2)
+        frame.append(UInt8(data.count & 0xFF)) //数据长度
+        frame.append(UInt8((data.count & 0xFF00) >> 8))
+        frame.append(CRCCheck.shareInstance.checkCRC8(buf: frame)) //头校验
+        
+        var argsByte:UInt8 = 0x0
+        argsByte += NEED_ACK
+        argsByte += (IS_ACK << 1)
+        argsByte += (CHECK_TYPE << 2)
+        
+        frame.append(argsByte) //need_ack
+        
+        frame.append(0x0) //frame_seq
+        frame.append(0x0)
+        frame.append(0x0)
+        frame.append(0x0)
+        
+        frame.append(UInt8(product & 0xFF)) //product type 第一次填0xFFFF
+        frame.append(UInt8((product & 0xFF00) >> 8))
+        
+        frame.append(BLUESERV_ADDR) //SERV_ADDR
+        frame.append(destAddr) //dest_addr
+        frame.append(cmdSet) //cmd set
+        frame.append(cmdID) //cmd ID
+        
+        //data
+        for i in 0 ..< data.count {
+            frame.append(data[i])
+        }
+        
+        //package tail CRC16
+        let crc16 = CRCCheck.shareInstance.checkCRC16(buf: frame)
+        frame.append(UInt8(crc16 & 0xFF))
+        frame.append(UInt8((crc16 & 0xFF00) >> 8))
+
+        return frame
+    }
+    // MARK: - 生成请求Data
+    func generateBlueToothCommand(type: EFCommands, cmdData: [UInt8]=[0x0], product: UInt16=0xFFFF) -> [UInt8] {
+        //只有获取SN的命令集是0x01，其他控制命令的命令集是CMD_SET_IOT_SERVER=0x20
+        switch type {
+        case .getSN:
+            let dat: [UInt8] = [0x0]
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_COMMON, cmdID: EFProtocol.CMD_ID_GET_SN, product: 0xFFFF, data: dat, destAddr: EFProtocol.ADDR_BLUE)
+        case .setLED:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_LED_CONFIG, product: product, data: cmdData, destAddr: EFProtocol.ADDR_PD)
+        case .getStatus:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_STATUS_PUSH, product: product, data: cmdData, destAddr: EFProtocol.ADDR_BLUE)
+        case .setLEDMode:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_AMBIENT_LIGHT, product: product, data: cmdData, destAddr: EFProtocol.ADDR_BMS_S)
+        case .setMaxChgSoc:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_UPS_CONFIG, product: product, data: cmdData, destAddr: EFProtocol.ADDR_BMS_M)
+        case .setBeep:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_SET_BEEP, product: product, data: cmdData, destAddr: EFProtocol.ADDR_PD)
+        case .setAC:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_AC_OUT, product: product, data: cmdData, destAddr: EFProtocol.ADDR_INV)
+        case .setDC:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_DC_CONFIG, product: product, data: cmdData, destAddr: EFProtocol.ADDR_PD)
+        case .setOutFreq:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_AC_OUT, product: product, data: cmdData, destAddr: EFProtocol.ADDR_INV)
+        case .setXboost:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_AC_OUT, product: product, data: cmdData, destAddr: EFProtocol.ADDR_INV)
+        case .setMoodLight:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_AMBIENT_LIGHT, product: product, data: cmdData, destAddr: EFProtocol.ADDR_BMS_S)
+        case .setLEDColor:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_AMBIENT_LIGHT, product: product, data: cmdData, destAddr: EFProtocol.ADDR_BMS_S)
+        case .setBrightness:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_AMBIENT_LIGHT, product: product, data: cmdData, destAddr: EFProtocol.ADDR_BMS_S)
+        case .setStandby:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_STAND_BY, product: product, data: cmdData, destAddr: EFProtocol.ADDR_PD)
+        case .setWorkMode:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_WORK_MODE, product: product, data: cmdData, destAddr: EFProtocol.ADDR_INV)
+        case .getWorkMode:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_GET_MPPT_MODE, product: product, data: cmdData, destAddr: EFProtocol.ADDR_INV)
+        case .resetDevice:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_SYS_RESET, product: product, data: cmdData, destAddr: EFProtocol.ADDR_PD)
+        case .getInvStatus:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_STATUS_PUSH, product: product, data: cmdData, destAddr: EFProtocol.ADDR_INV)
+        case .getBMSSlaveStatus:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_STATUS_PUSH, product: product, data: cmdData, destAddr: EFProtocol.ADDR_BMS_S)
+        case .getBMSMasterStatus:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_STATUS_PUSH, product: product, data: cmdData, destAddr: EFProtocol.ADDR_BMS_M)
+        case .getMpptStatus:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_STATUS_PUSH, product: product, data: cmdData, destAddr: EFProtocol.ADDR_MPPT)
+        case .setLcdStandbyTime:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_SET_LCD_TIME, product: product, data: cmdData, destAddr: EFProtocol.ADDR_PD)
+        case .setMPPT:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_SET_MPPT_MODE, product: product, data: cmdData, destAddr: EFProtocol.ADDR_INV)
+        case .getLcdStandbyTime:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_GET_LCD_TIME, product: product, data: cmdData, destAddr: EFProtocol.ADDR_PD)
+        case .getPDSysParams:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_GET_SYS_PARAMS, product: product, data: cmdData, destAddr: EFProtocol.ADDR_PD)
+        case .getInvSysParams:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_GET_SYS_PARAMS, product: product, data: cmdData, destAddr: EFProtocol.ADDR_INV)
+        case .getBmsSlaveSysParams:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_GET_SYS_PARAMS, product: product, data: cmdData, destAddr: EFProtocol.ADDR_BMS_S)
+        case .getBmsMasterSysParams:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_GET_SYS_PARAMS, product: product, data: cmdData, destAddr: EFProtocol.ADDR_BMS_M)
+        case .getSystemLogs:
+            return bluetoothEncode(cmdSet: EFProtocol.CMD_SET_IOT_SERVER, cmdID: EFProtocol.CMD_ID_GET_SYS_LOGS, product: product, data: cmdData, destAddr: EFProtocol.ADDR_PD)
+        }
+        //return [UInt8]()
+    }
     func generateCommand(type: EFCommands, cmdData: [UInt8]=[0x0], product: UInt16=0xFFFF) -> [UInt8] {
         //只有获取SN的命令集是0x01，其他控制命令的命令集是CMD_SET_IOT_SERVER=0x20
         switch type {

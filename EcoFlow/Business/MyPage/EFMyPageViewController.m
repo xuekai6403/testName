@@ -16,10 +16,8 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view.
     // 隐藏导航栏
     self.zx_hideBaseNavBar = YES;
-    self.view.backgroundColor = [UIColor blueColor];
     
     [self tcpConnect];
 }

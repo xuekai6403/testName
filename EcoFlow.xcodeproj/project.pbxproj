@@ -81,9 +81,14 @@
 		6FBA417D25FEF2880040C9CE /* GACSocketModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 6FBA417B25FEF2880040C9CE /* GACSocketModel.m */; };
 		6FBA417E25FEF2880040C9CE /* GACConnectConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 6FBA417C25FEF2880040C9CE /* GACConnectConfig.m */; };
 		B437CE2265115CB4231DB119 /* Pods_EcoFlow.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C74946771643B698DD9CD889 /* Pods_EcoFlow.framework */; };
+		C4340E902602E4C4003F07ED /* ParsingTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4340E8F2602E4C4003F07ED /* ParsingTool.swift */; };
+		C4340E9326030198003F07ED /* EncodeTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4340E9226030198003F07ED /* EncodeTool.swift */; };
 		C47A8BD726004D3900412393 /* EFDeviceBottomViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C47A8BD626004D3900412393 /* EFDeviceBottomViewController.m */; };
 		C47A8BDB26004D5600412393 /* EFDevicePresentViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C47A8BDA26004D5600412393 /* EFDevicePresentViewController.m */; };
 		C47A8BDF2600801200412393 /* EFDeviceBottomView.m in Sources */ = {isa = PBXBuildFile; fileRef = C47A8BDE2600801200412393 /* EFDeviceBottomView.m */; };
+		C4BC94FF2604383600DC9E88 /* BlueToothListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C4BC94FE2604383600DC9E88 /* BlueToothListViewController.m */; };
+		C4BC950326043A5200DC9E88 /* BluetoothDetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C4BC950226043A5200DC9E88 /* BluetoothDetailViewController.m */; };
+		C4BC9508260441E200DC9E88 /* BluetoothManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C4BC9507260441E200DC9E88 /* BluetoothManager.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -229,12 +234,20 @@
 		6FBA417A25FEF2880040C9CE /* GACConnectConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GACConnectConfig.h; sourceTree = "<group>"; };
 		6FBA417B25FEF2880040C9CE /* GACSocketModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GACSocketModel.m; sourceTree = "<group>"; };
 		6FBA417C25FEF2880040C9CE /* GACConnectConfig.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GACConnectConfig.m; sourceTree = "<group>"; };
+		C4340E8F2602E4C4003F07ED /* ParsingTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParsingTool.swift; sourceTree = "<group>"; };
+		C4340E9226030198003F07ED /* EncodeTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncodeTool.swift; sourceTree = "<group>"; };
 		C47A8BD526004D3900412393 /* EFDeviceBottomViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EFDeviceBottomViewController.h; sourceTree = "<group>"; };
 		C47A8BD626004D3900412393 /* EFDeviceBottomViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EFDeviceBottomViewController.m; sourceTree = "<group>"; };
 		C47A8BD926004D5600412393 /* EFDevicePresentViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EFDevicePresentViewController.h; sourceTree = "<group>"; };
 		C47A8BDA26004D5600412393 /* EFDevicePresentViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EFDevicePresentViewController.m; sourceTree = "<group>"; };
 		C47A8BDD2600801200412393 /* EFDeviceBottomView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EFDeviceBottomView.h; sourceTree = "<group>"; };
 		C47A8BDE2600801200412393 /* EFDeviceBottomView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EFDeviceBottomView.m; sourceTree = "<group>"; };
+		C4BC94FD2604383600DC9E88 /* BlueToothListViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BlueToothListViewController.h; sourceTree = "<group>"; };
+		C4BC94FE2604383600DC9E88 /* BlueToothListViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlueToothListViewController.m; sourceTree = "<group>"; };
+		C4BC950126043A5200DC9E88 /* BluetoothDetailViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BluetoothDetailViewController.h; sourceTree = "<group>"; };
+		C4BC950226043A5200DC9E88 /* BluetoothDetailViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BluetoothDetailViewController.m; sourceTree = "<group>"; };
+		C4BC9506260441E200DC9E88 /* BluetoothManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BluetoothManager.h; sourceTree = "<group>"; };
+		C4BC9507260441E200DC9E88 /* BluetoothManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BluetoothManager.m; sourceTree = "<group>"; };
 		C74946771643B698DD9CD889 /* Pods_EcoFlow.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_EcoFlow.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -362,6 +375,7 @@
 		6FBA3F6425F759960040C9CE /* OtherPlugin */ = {
 			isa = PBXGroup;
 			children = (
+				C4BC9505260441AD00DC9E88 /* BluetoothManager */,
 				6FBA40C725FB14870040C9CE /* SocketManager */,
 				6FBA408225F8E43A0040C9CE /* EFRoundProgress */,
 				6FBA401925F778440040C9CE /* NetWork */,
@@ -551,6 +565,7 @@
 		6FBA403A25F7936E0040C9CE /* DevicePage */ = {
 			isa = PBXGroup;
 			children = (
+				C4BC950B2604737D00DC9E88 /* VC */,
 				C47A8BCD260048F300412393 /* View */,
 				6FBA408E25F9B6490040C9CE /* Model */,
 				6FBA403B25F793BE0040C9CE /* EFDeviceHomeViewController.h */,
@@ -612,6 +627,8 @@
 				6FBA40D025FB1D050040C9CE /* Networking.swift */,
 				6FBA40CD25FB1D050040C9CE /* TcpHelper.swift */,
 				6FBA40C925FB14C50040C9CE /* CRCCheck.swift */,
+				C4340E8F2602E4C4003F07ED /* ParsingTool.swift */,
+				C4340E9226030198003F07ED /* EncodeTool.swift */,
 				6FBA40C825FB14C40040C9CE /* EcoFlow-Bridging-Header.h */,
 			);
 			path = SocketManager;
@@ -659,6 +676,26 @@
 				C47A8BDE2600801200412393 /* EFDeviceBottomView.m */,
 			);
 			path = View;
+			sourceTree = "<group>";
+		};
+		C4BC9505260441AD00DC9E88 /* BluetoothManager */ = {
+			isa = PBXGroup;
+			children = (
+				C4BC9506260441E200DC9E88 /* BluetoothManager.h */,
+				C4BC9507260441E200DC9E88 /* BluetoothManager.m */,
+			);
+			path = BluetoothManager;
+			sourceTree = "<group>";
+		};
+		C4BC950B2604737D00DC9E88 /* VC */ = {
+			isa = PBXGroup;
+			children = (
+				C4BC94FD2604383600DC9E88 /* BlueToothListViewController.h */,
+				C4BC94FE2604383600DC9E88 /* BlueToothListViewController.m */,
+				C4BC950126043A5200DC9E88 /* BluetoothDetailViewController.h */,
+				C4BC950226043A5200DC9E88 /* BluetoothDetailViewController.m */,
+			);
+			path = VC;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -783,6 +820,7 @@
 				6FBA3F9825F75B230040C9CE /* ZXNavItemBtn.m in Sources */,
 				6FBA3FC625F75DED0040C9CE /* NSBundle+BRPickerView.m in Sources */,
 				6FBA3F5E25F757410040C9CE /* EFAccountManager.m in Sources */,
+				C4340E902602E4C4003F07ED /* ParsingTool.swift in Sources */,
 				6FBA403D25F793BE0040C9CE /* EFDeviceHomeViewController.m in Sources */,
 				6FBA409125F9B65C0040C9CE /* EFDeviceData.m in Sources */,
 				6FBA3F8E25F75B230040C9CE /* ZXNavigationBarController.m in Sources */,
@@ -811,6 +849,7 @@
 				6FBA408025F8D6E10040C9CE /* UIView+EF.m in Sources */,
 				6FBA402D25F77DFD0040C9CE /* EFLoginUserInfo.m in Sources */,
 				6FBA3FC825F75DED0040C9CE /* BRAddressPickerView.m in Sources */,
+				C4BC94FF2604383600DC9E88 /* BlueToothListViewController.m in Sources */,
 				6FBA417E25FEF2880040C9CE /* GACConnectConfig.m in Sources */,
 				6FBA402625F778440040C9CE /* QBHttpTool.m in Sources */,
 				6FBA3F4A25F74D240040C9CE /* UIColor+HexColorSetting.m in Sources */,
@@ -821,6 +860,7 @@
 				6FBA411725FB1ECA0040C9CE /* Constants.swift in Sources */,
 				6FBA3FC025F75DED0040C9CE /* BRDatePickerView+BR.m in Sources */,
 				6FBA408825F8E43A0040C9CE /* EFCoreTextArcView.m in Sources */,
+				C4BC9508260441E200DC9E88 /* BluetoothManager.m in Sources */,
 				6FBA3FBF25F75DED0040C9CE /* BRStringPickerView.m in Sources */,
 				6FBA402425F778440040C9CE /* HYUploadModel.m in Sources */,
 				6FBA3FC725F75DED0040C9CE /* BRAddressModel.m in Sources */,
@@ -835,6 +875,7 @@
 				6FBA417525FEF2370040C9CE /* GCDAsyncSocketManager.m in Sources */,
 				6FBA3F9525F75B230040C9CE /* ZXNavigationBarNavigationController.m in Sources */,
 				6FBA3FC225F75DED0040C9CE /* BRDatePickerView.m in Sources */,
+				C4BC950326043A5200DC9E88 /* BluetoothDetailViewController.m in Sources */,
 				6FBA3EFF25F724C20040C9CE /* main.m in Sources */,
 				6FBA3F9025F75B230040C9CE /* NSString+ZXNavCalcSizeExtension.m in Sources */,
 				6FBA400A25F76C420040C9CE /* NSObject+EF.m in Sources */,
@@ -845,6 +886,7 @@
 				6FBA403725F792E50040C9CE /* UIWindow+ConfigRootVC.m in Sources */,
 				C47A8BDB26004D5600412393 /* EFDevicePresentViewController.m in Sources */,
 				6FBA40D425FB1D050040C9CE /* Networking.swift in Sources */,
+				C4340E9326030198003F07ED /* EncodeTool.swift in Sources */,
 				6FBA3F6225F7590F0040C9CE /* BaseModel.m in Sources */,
 				6FBA404325F794920040C9CE /* EFDiscoverPageViewController.m in Sources */,
 				6FBA404C25F798FF0040C9CE /* UIViewController+EF.m in Sources */,

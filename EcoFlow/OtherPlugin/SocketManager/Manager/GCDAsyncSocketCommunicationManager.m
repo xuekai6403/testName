@@ -9,7 +9,6 @@
 
 #import "GCDAsyncSocketCommunicationManager.h"
 #import "GCDAsyncSocket.h"
-#import "GCDAsyncSocketManager.h"
 #import "GACSocketModel.h"
 #import <UIKit/UIKit.h>
 #import "AFNetworkReachabilityManager.h"
@@ -24,7 +23,6 @@ static NSUInteger PROTOCOL_VERSION = 7;
 
 @property (nonatomic, strong) NSString *socketAuthAppraisalChannel;  // socket验证通道，支持多通道
 @property (nonatomic, strong) NSMutableDictionary *requestsMap;
-@property (nonatomic, strong) GCDAsyncSocketManager *socketManager;
 @property (nonatomic, assign) NSTimeInterval interval;  //服务器与本地时间的差值
 @property (nonatomic, strong, nonnull) GACConnectConfig *connectConfig;
 
@@ -120,107 +118,14 @@ static NSUInteger PROTOCOL_VERSION = 7;
 #pragma mark - GCDAsyncSocketDelegate
 
 - (void)socket:(GCDAsyncSocket *)socket didConnectToHost:(NSString *)host port:(UInt16)port {
-//    GACSocketModel *socketModel = [[GACSocketModel alloc] init];
-//    socketModel.version = PROTOCOL_VERSION;
-//    socketModel.reqType = GACRequestType_ConnectionAuthAppraisal;
-//    socketModel.reqId = [self createRequestID];
-//    socketModel.requestChannel = self.socketAuthAppraisalChannel;
-//
-//    socketModel.body =
-//    @{ @"token": [GCKeyChainManager sharedInstance].token ?: @"",
-//       @"endpoint": @"ios" };
-    
-    NSData *data = [BaseDevice configLEDByLanWithState:0];
-    [self.socketManager socketWriteRawData:data];
-//    [self.socketManager socketWriteData:[socketModel socketModelToJSONString]];
-    
-    NSLog(@"socket:%p didConnectToHost:%@ port:%hu", socket, host, port);
-    NSLog(@"Cool, I'm connected! That was easy.");
+//    NSData *data = [BaseDevice configLEDByLanWithState:0];
+//    [self.socketManager socketWriteRawData:data];
+    [self.socketDelegate socketDidConnect];
 }
-
-- (void)socketDidDisconnect:(GCDAsyncSocket *)socket withError:(NSError *)err {
-//    GACSocketModel *socketModel = [[GACSocketModel alloc] init];
-//    socketModel.version = PROTOCOL_VERSION;
-//    socketModel.reqType = GACRequestType_ConnectionAuthAppraisal;
-//    socketModel.reqId = [self createRequestID];
-//    socketModel.requestChannel = self.socketAuthAppraisalChannel;
-//    socketModel.body = @{
-//                         @"token":
-//                             [GCKeyChainManager sharedInstance].token == nil ? @"" : [GCKeyChainManager sharedInstance].token,
-//                         @"endpoint": @"ios"
-//                         };
-    
-//    NSString *requestBody = [socketModel socketModelToJSONString];
-    
-//    [self.socketManager socketDidDisconectBeginSendReconnect:requestBody];
-//    [self.socketManager socketDidDisconectBeginSendReconnect:@"AAA"];
-    NSLog(@"socketDidDisconnect:%p withError: %@", socket, err);
-}
-
 - (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag {
-    NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    jsonString = [jsonString stringByReplacingOccurrencesOfString:@"\r\n" withString:@""];
-    NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
-    
-    NSError *jsonError;
-    NSDictionary *json =
-    [NSJSONSerialization JSONObjectWithData:jsonData options:kNilOptions error:&jsonError];
-    NSLog(@"socket - receive data %@", json);
-    
-    if (jsonError) {
-        [self.socketManager socketBeginReadData];
-        NSLog(@"json 解析错误: --- error %@", jsonError);
-        return;
-    }
-    
-    NSInteger requestType = [json[@"reqType"] integerValue];
-    NSInteger errorCode = [json[@"status"] integerValue];
-    NSDictionary *body = @{};
-    NSString *requestID = json[@"reqId"];
-    NSString *requestChannel = nil;
-    if ([[json allKeys] containsObject:@"requestChannel"]) {
-        requestChannel = json[@"requestChannel"];
-    }
-    
-    SocketDidReadBlock didReadBlock = self.requestsMap[requestID];
-    
-    if (errorCode != 0) {
-//        NSError *error = [GACErrorManager errorWithErrorCode:errorCode];
-//        if (requestType == GACRequestType_ConnectionAuthAppraisal &&
-//            [self.socketDelegate respondsToSelector:@selector(connectionAuthAppraisalFailedWithErorr:)]) {
-//            [self.socketDelegate connectionAuthAppraisalFailedWithErorr:[GACErrorManager errorWithErrorCode:1005]];
-//        }
-        if (didReadBlock) {
-//            didReadBlock(error, body);
-        }
-        return;
-    }
-    
-    switch (requestType) {
-        case GACRequestType_ConnectionAuthAppraisal: {
-            [self didConnectionAuthAppraisal];
-            
-            NSDictionary *systemTimeDic = [body mutableCopy];
-            [self differenceOfLocalTimeAndServerTime:[systemTimeDic[@"system_time"] longLongValue]];
-        } break;
-        case GACRequestType_Beat: {
-            [self.socketManager resetBeatCount];
-        } break;
-        case GACRequestType_GetConversationsList: {
-            if (didReadBlock) {
-                didReadBlock(nil, body);
-            }
-        } break;
-        default: {
-            if ([self.socketDelegate respondsToSelector:@selector(socketReadedData:forType:)]) {
-                [self.socketDelegate socketReadedData:body forType:requestType];
-            }
-        } break;
-    }
-
+    [self.socketDelegate socketReadedData:data forType:1];
     [self.socketManager socketBeginReadData];
 }
-
 #pragma mark-- private method
 - (NSString *)createRequestID {
     NSInteger timeInterval = [NSDate date].timeIntervalSince1970 * 1000000;
