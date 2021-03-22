@@ -428,7 +428,6 @@
         BOOL isSuccess = NO;
         if (responseObj.data != nil) {
             isSuccess = YES;
-            
         }
         NSLog(@"%@", responseObj);
         

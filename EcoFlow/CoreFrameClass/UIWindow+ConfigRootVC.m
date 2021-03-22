@@ -17,17 +17,15 @@
     EFAccountItem *account = [EFAccountManager account];
     
     //FIXME:- tase code
-    EFTabBarVC *tabbarVC = [EFTabBarVC new];
-    tabbarVC.selectedIndex = 0;
-    self.rootViewController = tabbarVC;
-    return;
+//    EFTabBarVC *tabbarVC = [EFTabBarVC new];
+//    tabbarVC.selectedIndex = 0;
+//    self.rootViewController = tabbarVC;
+//    return;
     
     if ((account.appToken.length > 0) && (account.LoginFlag.length > 0)) {
         EFTabBarVC *tabbarVC = [EFTabBarVC new];
         tabbarVC.selectedIndex = index;
         self.rootViewController = tabbarVC;
-        
-        
     } else {
         [EFAccountManager callLoginPage];
     }
